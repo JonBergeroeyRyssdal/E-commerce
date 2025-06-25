@@ -1,0 +1,110 @@
+<% title = 'Products' %>
+
+<div class="container py-4">
+  <div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <h1 class="h3">Products</h1>
+      <a href="/admin/products/new" class="btn btn-success">Add Product</a>
+    </div>
+  </div>
+
+  <!-- Search Form -->
+  <form method="POST" action="/admin/products/search" class="mb-4">
+    <div class="row g-2">
+      <div class="col-12 col-md-3">
+        <input name="name" class="form-control" placeholder="Search name" />
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="category" class="form-select">
+          <option value="">All Categories</option>
+          <% categories.forEach(category => { %>
+            <option value="<%= category.id %>"><%= category.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <select name="brand" class="form-select">
+          <option value="">All Brands</option>
+          <% brands.forEach(brand => { %>
+            <option value="<%= brand.id %>"><%= brand.name %></option>
+          <% }) %>
+        </select>
+      </div>
+      <div class="col-12 col-md-1 d-grid">
+        <button class="btn btn-primary w-100">Search</button>
+      </div>
+      <div class="col-12 col-md-2 d-grid">
+        <a href="/admin/products" class="btn btn-secondary w-100">Clear</a>
+      </div>
+    </div>
+  </form>
+
+  <!-- Products Table -->
+  <div class="table-responsive">
+    <table class="table table-striped align-middle">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">Image</th>
+          <th scope="col">Title</th>
+          <th scope="col">Brand</th>
+          <th scope="col">Category</th>
+          <th scope="col">Price</th>
+          <th scope="col">Quantity</th>
+          <th scope="col">Status</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% products.forEach(product => { %>
+          <tr class="<%= product.isDeleted ? 'text-muted' : '' %>">
+            <td>
+              <% if (product.image) { %>
+                <img
+                  src="<%= product.image %>"
+                  class="img-fluid img-thumbnail"
+                  style="max-width: 80px;"
+                  alt="Product image"
+                />
+              <% } else { %>
+                —
+              <% } %>
+            </td>
+            <td>
+              <%= product.title %>
+              <% if (product.isDeleted) { %>
+                <span class="badge bg-danger ms-2">Deleted</span>
+              <% } %>
+            </td>
+            <td><%= product.Brand ? product.Brand.name : 'Unknown' %></td>
+            <td><%= product.Category ? product.Category.name : 'Unknown' %></td>
+            <td>$<%= (+product.price).toFixed(2) %></td>
+            <td><%= product.quantity %></td>
+            <td>
+              <% if (product.isDeleted) { %>
+                <span class="badge bg-danger">Deleted</span>
+              <% } else { %>
+                <span class="badge bg-success">Active</span>
+              <% } %>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm" role="group">
+                <a href="/admin/products/<%= product.id %>/edit" class="btn btn-warning">
+                  Edit
+                </a>
+                <form method="POST" action="/admin/products/<%= product.id %>/toggle"
+                  onsubmit="return confirm('Are you sure you want to <%= product.isDeleted ? 'reactivate' : 'deactivate' %> this product?');">
+                  <button type="submit" class="btn <%= product.isDeleted ? 'btn-success' : 'btn-danger' %>">
+                    <%= product.isDeleted ? 'Reactivate' : 'Deactivate' %>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+

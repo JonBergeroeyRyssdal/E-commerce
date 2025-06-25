@@ -1,0 +1,55 @@
+<!-- File: views/admin/users.ejs -->
+<% title = 'Users' %>
+
+<div class="container py-4">
+  <div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+      <h1 class="h3">Users</h1>
+      <a href="/admin/users/new" class="btn btn-success">Add User</a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">Username</th>
+          <th scope="col">Email</th>
+          <th scope="col">Role</th>
+          <th scope="col">Membership</th>
+          <th scope="col">Discount</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(user => { %>
+          <tr>
+            <td class="align-middle"><%= user.username %></td>
+            <td class="align-middle"><%= user.email %></td>
+            <td class="align-middle"><%= user.RoleId === 1 ? 'Admin' : 'User' %></td>
+            <td class="align-middle"><%= user.Membership ? user.Membership.name : '—' %></td>
+            <td class="align-middle"><%= user.Membership ? user.Membership.discount : 0 %>%</td>
+            <td class="align-middle">
+              <div class="d-flex gap-2">
+                <% if (user.RoleId === 1) { %>
+                  <form action="/admin/users/<%= user.id %>/demote" method="POST" class="mb-0">
+                    <button type="submit" class="btn btn-warning btn-sm">Make User</button>
+                  </form>
+                <% } else { %>
+                  <form action="/admin/users/<%= user.id %>/promote" method="POST" class="mb-0">
+                    <button type="submit" class="btn btn-primary btn-sm">Make Admin</button>
+                  </form>
+                <% } %>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+
+

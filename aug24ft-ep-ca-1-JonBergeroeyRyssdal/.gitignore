@@ -1,0 +1,22 @@
+# Node dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor/IDE files
+.vscode/
+
+
+
+
+
+
+
+
+
+
