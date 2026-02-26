@@ -8,10 +8,6 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 'In Progress',
       },
-      totalQuantity: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
       discountApplied: {
         type: DataTypes.INTEGER,
         allowNull: false,
@@ -24,20 +20,20 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      timestamps: true, // Automatically adds createdAt and updatedAt
-      tableName: 'Orders', // Optional: explicitly define table name
+      timestamps: true,
+      tableName: 'Orders',
     }
   );
 
   Order.associate = (models) => {
     Order.belongsTo(models.User, {
       foreignKey: 'userId',
-      onDelete: 'CASCADE', // Optional: clean up orders if user is deleted
+      onDelete: 'CASCADE',
     });
 
     Order.hasMany(models.OrderItem, {
       foreignKey: 'orderId',
-      onDelete: 'CASCADE', // Optional: delete order items if order is deleted
+      onDelete: 'CASCADE',
     });
   };
 

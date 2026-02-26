@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
       RoleId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 2, // default to 'User'
+        defaultValue: 2,
         field: 'role_id',
       },
 
@@ -47,16 +47,8 @@ module.exports = (sequelize, DataTypes) => {
       MembershipId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 1, // default to Bronze membership
+        defaultValue: 1,
         field: 'membership_id',
-      },
-
-      // Track total items purchased for membership upgrades
-      totalItemsPurchased: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0,
-        field: 'total_items_purchased',
       },
     },
     {
@@ -65,7 +57,6 @@ module.exports = (sequelize, DataTypes) => {
     }
   );
 
-  // Optional: Define associations
   User.associate = (models) => {
     User.belongsTo(models.Role, { foreignKey: 'RoleId' });
     User.belongsTo(models.Membership, { foreignKey: 'MembershipId' });

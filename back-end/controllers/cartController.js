@@ -1,3 +1,4 @@
+// controllers/cartController.js
 const cartService = require('../services/cartService');
 
 exports.addToCart = async (req, res) => {
@@ -30,13 +31,20 @@ exports.getCartItems = async (req, res) => {
 exports.checkoutNow = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { order, newMembership, discountApplied } = await cartService.checkoutNow(userId);
-    res.status(201).json({ order, discountApplied, newMembership });
+
+    // New 3NF checkout returns { order, totalQuantity }
+    const { order, totalQuantity } = await cartService.checkoutNow(userId);
+
+    res.status(201).json({
+      order,
+      totalQuantity,                    // computed, not stored
+      discountApplied: order.discountApplied ?? 0,
+      newMembership: null,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Checkout failed' });
   }
 };
-
 
 
 

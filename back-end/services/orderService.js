@@ -1,4 +1,6 @@
-const { Order, OrderItem, User, Product, Cart } = require('../models');
+// back-end/services/orderService.js
+
+const { sequelize, Order, OrderItem, User, Product, Cart } = require('../models');
 
 /**
  * Generates a unique 8-digit order number prefixed with "ORD-"
@@ -14,8 +16,8 @@ async function getAllOrders() {
   return Order.findAll({
     include: [
       { model: User, attributes: ['id', 'username', 'email'] },
-      { model: OrderItem, include: [Product] }
-    ]
+      { model: OrderItem, include: [Product] },
+    ],
   });
 }
 
@@ -25,8 +27,8 @@ async function getAllOrders() {
  */
 async function getUserOrders(userId) {
   return Order.findAll({
-    where: { UserId: userId },
-    include: [{ model: OrderItem, include: [Product] }]
+    where: { userId },
+    include: [{ model: OrderItem, include: [Product] }],
   });
 }
 
@@ -45,65 +47,93 @@ async function updateOrderStatus(id, status) {
 
 /**
  * Handles the full checkout process for a user's cart:
+ * - Validates stock
  * - Creates an order
  * - Adds order items
  * - Empties the user's cart
  * - Reduces stock for each product
  *
+ * 3NF: does NOT store derived totals (like totalQuantity) in Orders.
+ *
  * @param {number} userId - ID of the user checking out
- * @returns {Promise<Order>}
+ * @returns {Promise<object>} - { order, totalQuantity }
  */
 async function checkoutCart(userId) {
-  const cartItems = await Cart.findAll({ where: { UserId: userId }, include: [Product] });
-
-  if (!cartItems || cartItems.length === 0) {
-    throw new Error('Cart is empty, cannot checkout');
-  }
-
-  // Check that all items have enough stock
-  for (const item of cartItems) {
-    if (item.Product.quantity < item.quantity) {
-      throw new Error(`Insufficient stock for product: ${item.Product.title}`);
-    }
-  }
-
-  // Deduct stock
-  for (const item of cartItems) {
-    item.Product.quantity -= item.quantity;
-    await item.Product.save();
-  }
-
-  // Create order
-  const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-
-  const order = await Order.create({
-    UserId: userId,
-    status: 'Pending',
-    totalQuantity,
-    discountApplied: 0,
-    orderNumber: generateOrderNumber()
-  });
-
-  // Create order items
-  await Promise.all(cartItems.map(item => {
-    return OrderItem.create({
-      OrderId: order.id,
-      ProductId: item.ProductId,
-      quantity: item.quantity,
-      priceAtPurchase: item.Product.price
+  return sequelize.transaction(async (t) => {
+    // Fetch cart items + products (lock rows for consistency)
+    const cartItems = await Cart.findAll({
+      where: { userId },
+      include: [{ model: Product }],
+      transaction: t,
+      lock: t.LOCK.UPDATE,
     });
-  }));
 
-  // Empty the cart
-  await Cart.destroy({ where: { UserId: userId } });
+    if (!cartItems.length) {
+      throw new Error('Cart is empty, cannot checkout');
+    }
 
-  return order;
+    // Validate stock + calculate totalQuantity (computed, not stored)
+    let totalQuantity = 0;
+
+    for (const item of cartItems) {
+      const product = item.Product;
+      if (!product) throw new Error('A cart item references a missing product');
+
+      if (product.isDeleted) {
+        throw new Error(`Product "${product.title}" is deleted`);
+      }
+
+      if (product.quantity < item.quantity) {
+        throw new Error(`Insufficient stock for product: ${product.title}`);
+      }
+
+      totalQuantity += item.quantity;
+    }
+
+    // Deduct stock
+    for (const item of cartItems) {
+      const product = item.Product;
+      product.quantity -= item.quantity;
+      await product.save({ transaction: t });
+    }
+
+    // Create order (NO totalQuantity column)
+    const order = await Order.create(
+      {
+        userId,
+        status: 'Pending',
+        discountApplied: 0,
+        orderNumber: generateOrderNumber(),
+      },
+      { transaction: t }
+    );
+
+    // Create order items
+    await Promise.all(
+      cartItems.map((item) =>
+        OrderItem.create(
+          {
+            orderId: order.id,
+            productId: item.productId,
+            quantity: item.quantity,
+            priceAtPurchase: Number(item.Product.price),
+          },
+          { transaction: t }
+        )
+      )
+    );
+
+    // Empty the cart
+    await Cart.destroy({ where: { userId }, transaction: t });
+
+    // Return order + computed totals (not stored)
+    return { order, totalQuantity };
+  });
 }
 
 module.exports = {
   getAllOrders,
   getUserOrders,
   updateOrderStatus,
-  checkoutCart
+  checkoutCart,
 };
-

@@ -1,6 +1,6 @@
 // routes/index.js
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
 /**
  * @swagger
@@ -12,15 +12,19 @@ var router = express.Router();
  * @swagger
  * /:
  *   get:
- *     summary: Render home page
+ *     summary: API root endpoint
  *     tags:
  *       - Home
  *     responses:
  *       200:
- *         description: OK
+ *         description: API is running
  */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+router.get('/', (req, res) => {
+  res.json({
+    message: 'E-commerce API is running',
+    documentation: '/doc',
+    health: '/health'
+  });
 });
 
 module.exports = router;

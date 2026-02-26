@@ -1,3 +1,4 @@
+// controllers/orderController.js
 const orderService = require('../services/orderService');
 const cartService = require('../services/cartService');
 
@@ -36,12 +37,18 @@ exports.updateOrderStatus = async (req, res) => {
 exports.checkoutCartNow = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { order, newMembership, discountApplied } = await cartService.checkoutNow(userId);
-    res.status(201).json({ order, discountApplied, newMembership });
+
+    const { order, totalQuantity } = await cartService.checkoutNow(userId);
+
+    res.status(201).json({
+      order,
+      totalQuantity,                    // computed, not stored
+      discountApplied: order.discountApplied ?? 0,
+      newMembership: null,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Checkout failed' });
   }
 };
-
 
 

@@ -37,7 +37,6 @@ async function initializeDatabase() {
     phone: '911',
     RoleId: adminRole.id,
     MembershipId: 1,
-    totalItemsPurchased: 0
   });
 
   // Fetch and populate products
