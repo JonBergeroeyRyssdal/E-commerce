@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node swagger",
-    "test": "jest"
-  },
+  "start": "node ./bin/www",
+  "swagger": "node swagger.js",
+  "test": "jest"
+},
   "dependencies": {
     "axios": "^1.9.0",
     "bcrypt": "^6.0.0",
