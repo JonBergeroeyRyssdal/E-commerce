@@ -2,16 +2,16 @@
 
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
-const API_BASE_URL = 'http://localhost:3000';
+const api = require('../../services/api'); // ✅ felles axios client
 const requireAdminLogin = require('../../middleware/requireAdminLogin');
 
 // GET /admin/categories
 router.get('/', requireAdminLogin, async (req, res) => {
   try {
-    const { data: categories } = await axios.get(`${API_BASE_URL}/categories`, {
+    const { data: categories } = await api.get('/categories', {
       headers: { Authorization: `Bearer ${req.session.token}` }
     });
+
     res.render('admin/categories', { categories });
   } catch (error) {
     console.error(error);
@@ -30,9 +30,10 @@ router.get('/new', requireAdminLogin, (req, res) => {
 // POST /admin/categories
 router.post('/', requireAdminLogin, async (req, res) => {
   try {
-    await axios.post(`${API_BASE_URL}/categories`, req.body, {
+    await api.post('/categories', req.body, {
       headers: { Authorization: `Bearer ${req.session.token}` }
     });
+
     res.redirect('/admin/categories');
   } catch (error) {
     console.error(error);
@@ -43,13 +44,15 @@ router.post('/', requireAdminLogin, async (req, res) => {
 // GET /admin/categories/:id/edit
 router.get('/:id/edit', requireAdminLogin, async (req, res) => {
   try {
-    const { data: categories } = await axios.get(`${API_BASE_URL}/categories`, {
+    const { data: categories } = await api.get('/categories', {
       headers: { Authorization: `Bearer ${req.session.token}` }
     });
+
     const category = categories.find(c => c.id === parseInt(req.params.id, 10));
     if (!category) {
       return res.status(404).render('error', { message: 'Category not found' });
     }
+
     res.render('admin/categoryForm', { category });
   } catch (error) {
     console.error(error);
@@ -63,9 +66,10 @@ router.get('/:id/edit', requireAdminLogin, async (req, res) => {
 // PUT /admin/categories/:id
 router.put('/:id', requireAdminLogin, async (req, res) => {
   try {
-    await axios.put(`${API_BASE_URL}/categories/${req.params.id}`, req.body, {
+    await api.put(`/categories/${req.params.id}`, req.body, {
       headers: { Authorization: `Bearer ${req.session.token}` }
     });
+
     res.redirect('/admin/categories');
   } catch (error) {
     console.error(error);
@@ -79,9 +83,10 @@ router.put('/:id', requireAdminLogin, async (req, res) => {
 // DELETE /admin/categories/:id
 router.delete('/:id', requireAdminLogin, async (req, res) => {
   try {
-    await axios.delete(`${API_BASE_URL}/categories/${req.params.id}`, {
+    await api.delete(`/categories/${req.params.id}`, {
       headers: { Authorization: `Bearer ${req.session.token}` }
     });
+
     res.redirect('/admin/categories');
   } catch (error) {
     console.error(error);
@@ -93,4 +98,3 @@ router.delete('/:id', requireAdminLogin, async (req, res) => {
 });
 
 module.exports = router;
-

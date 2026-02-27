@@ -1,4 +1,5 @@
 // File: app.js
+require('dotenv').config();
 
 const createError    = require('http-errors');
 const express        = require('express');
@@ -18,22 +19,29 @@ const { setUserLocals } = require('./middleware/setUserLocals');
 const indexRouter = require('./routes/index');
 
 // Admin
-// Note: require('./routes/admin') will auto-load index.js
-const adminIndexRouter = require('./routes/admin/index');  // explicitly load index.js
-const adminUsersRouter    = require('./routes/admin/users');
-const adminProductsRouter = require('./routes/admin/products');
-const adminSearchRouter   = require('./routes/admin/search');
-const adminOrdersRouter   = require('./routes/admin/orders');
-const adminBrandsRouter   = require('./routes/admin/brands');
+const adminIndexRouter      = require('./routes/admin/index');
+const adminUsersRouter      = require('./routes/admin/users');
+const adminProductsRouter   = require('./routes/admin/products');
+const adminSearchRouter     = require('./routes/admin/search');
+const adminOrdersRouter     = require('./routes/admin/orders');
+const adminBrandsRouter     = require('./routes/admin/brands');
 const adminCategoriesRouter = require('./routes/admin/categories');
 
 const app = express();
+
+// ✅ Render/Proxy-friendly (viktig når du bruker sessions/cookies bak Render)
+app.set('trust proxy', 1);
+
+// ✅ Backend base URL (settes i Render env vars på FRONTEND service)
+// Lokalt kan du bruke http://localhost:XXXX
+const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3000';
+app.locals.API_BASE_URL = API_BASE_URL;
 
 // ---- View Engine & Layouts ----
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(expressLayouts);
-app.set('layout', 'layouts/layout');  // points to views/layouts/layout.ejs
+app.set('layout', 'layouts/layout'); // views/layouts/layout.ejs
 
 // ---- Core Middleware ----
 app.use(logger('dev'));
@@ -41,12 +49,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(methodOverride('_method'));
+
+// ✅ Session secret må komme fra env (ikke hardkodet)
+if (!process.env.SESSION_SECRET) {
+  console.warn('⚠️ SESSION_SECRET is not set. Set it in Render Environment Variables.');
+}
+
 app.use(
   session({
-    secret: 'dittHemmeligeSessionSecret',
+    secret: process.env.SESSION_SECRET || 'dev-only-secret-change-me',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }
+    cookie: {
+      secure: false,   // Sett til true hvis du vil tvinge HTTPS-cookies (kan aktiveres senere)
+      sameSite: 'lax'
+    }
   })
 );
 
@@ -60,9 +77,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 
 // ---- Admin Routes ----
-// Public: login/logout/dashboard
 app.use('/admin', adminIndexRouter);
-// Protected sub-routes
 app.use('/admin/users', requireAdminLogin, adminUsersRouter);
 app.use('/admin/products', requireAdminLogin, adminProductsRouter);
 app.use('/admin/products/search', requireAdminLogin, adminSearchRouter);
@@ -71,18 +86,16 @@ app.use('/admin/brands', requireAdminLogin, adminBrandsRouter);
 app.use('/admin/categories', requireAdminLogin, adminCategoriesRouter);
 
 // ---- Error Handling ----
-// 404
 app.use((req, res, next) => next(createError(404)));
-// General error handler
+
 app.use((err, req, res, next) => {
   res.locals.message = err.message;
-  res.locals.error   = req.app.get('env') === 'development' ? err : {};
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
   res.status(err.status || 500);
   res.render('error');
 });
 
 module.exports = app;
-
 
 
 

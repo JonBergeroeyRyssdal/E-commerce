@@ -2,16 +2,16 @@
 
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
-const API_BASE_URL = 'http://localhost:3000';
+const api = require('../../services/api'); // ✅ felles axios client
 const requireAdminLogin = require('../../middleware/requireAdminLogin');
 
 // GET /admin/users
 router.get('/', requireAdminLogin, async (req, res) => {
   try {
-    const { data: users } = await axios.get(`${API_BASE_URL}/users`, {
+    const { data: users } = await api.get('/users', {
       headers: { Authorization: `Bearer ${req.session.token}` }
     });
+
     res.render('admin/users', { users });
   } catch (error) {
     console.error(error);
@@ -22,11 +22,12 @@ router.get('/', requireAdminLogin, async (req, res) => {
 // POST /admin/users/:id/promote
 router.post('/:id/promote', requireAdminLogin, async (req, res) => {
   try {
-    await axios.put(
-      `${API_BASE_URL}/users/${req.params.id}/role`,
+    await api.put(
+      `/users/${req.params.id}/role`,
       { roleId: 1 },
       { headers: { Authorization: `Bearer ${req.session.token}` } }
     );
+
     res.redirect('/admin/users');
   } catch (error) {
     console.error(error);
@@ -37,11 +38,12 @@ router.post('/:id/promote', requireAdminLogin, async (req, res) => {
 // POST /admin/users/:id/demote
 router.post('/:id/demote', requireAdminLogin, async (req, res) => {
   try {
-    await axios.put(
-      `${API_BASE_URL}/users/${req.params.id}/role`,
+    await api.put(
+      `/users/${req.params.id}/role`,
       { roleId: 2 },
       { headers: { Authorization: `Bearer ${req.session.token}` } }
     );
+
     res.redirect('/admin/users');
   } catch (error) {
     console.error(error);
@@ -57,7 +59,11 @@ router.get('/new', requireAdminLogin, (req, res) => {
 // POST /admin/users
 router.post('/', requireAdminLogin, async (req, res) => {
   try {
-    await axios.post(`${API_BASE_URL}/auth/register`, req.body);
+    // hvis register-endpoint krever admin-token, legg til header:
+    await api.post('/auth/register', req.body, {
+      headers: { Authorization: `Bearer ${req.session.token}` }
+    });
+
     res.redirect('/admin/users');
   } catch (error) {
     console.error(error);
@@ -66,5 +72,3 @@ router.post('/', requireAdminLogin, async (req, res) => {
 });
 
 module.exports = router;
-
-

@@ -11,9 +11,7 @@ npm-debug.log*
 # Editor/IDE files
 .vscode/
 
-.Tilbakemlding.txt
-.connection_details_aiven.txt
-users.txt
+
 
 
 

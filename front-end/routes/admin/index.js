@@ -2,8 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const axios = require('axios');
-const API_BASE_URL = 'http://localhost:3000';
+const api = require('../../services/api'); // ✅ felles axios client
 const requireAdminLogin = require('../../middleware/requireAdminLogin');
 
 // GET /admin (Dashboard)
@@ -23,21 +22,27 @@ router.get('/login', (req, res) => {
 });
 
 // POST /admin/login
-router.post('/login', async (req, res, next) => {
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
-    const { token, user } = response.data;
 
+const { data } = await api.post('/admin/login', { email, password });
+
+    const { token, user } = data;
+
+    // lagre token + user i session
     req.session.token = token;
     req.session.user = {
       username: user.username,
-      roleId: user.roleId
+      roleId: user.roleId,
+      email: user.email,      // valgfritt
+      id: user.id             // valgfritt
     };
 
     res.redirect('/admin');
   } catch (error) {
-    console.error(error);
+    console.error(error?.response?.data || error);
+
     res.status(401).render('admin/login', {
       title: 'Admin Login',
       error: 'Invalid email or password'
@@ -48,12 +53,9 @@ router.post('/login', async (req, res, next) => {
 // GET /admin/logout
 router.get('/logout', (req, res) => {
   req.session.destroy(err => {
-    if (err) {
-      console.error(err);
-    }
+    if (err) console.error(err);
     res.redirect('/admin/login');
   });
 });
 
 module.exports = router;
-
