@@ -23,10 +23,13 @@ router.get('/login', (req, res) => {
 
 // POST /admin/login
 router.post('/login', async (req, res) => {
+  console.log("Using API:", req.app.locals.API_BASE_URL);
+  console.log("Body:", req.body);
+
   try {
     const { email, password } = req.body;
 
-const { data } = await api.post('/admin/login', { email, password });
+const { data } = await api.post('/auth/login', { email, password });
 
     const { token, user } = data;
 
