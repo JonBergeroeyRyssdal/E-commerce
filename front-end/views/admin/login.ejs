@@ -12,6 +12,17 @@
             <div class="alert alert-danger"><%= error %></div>
           <% } %>
 
+          <div class="container mt-3">
+            <div class="alert alert-warning alert-dismissible fade show d-flex justify-content-between align-items-center" role="alert">
+              <div>
+                <strong>Demo login:</strong> 
+                Email: <code>admin@noroff.no</code> | 
+                Password: <code>P@ssword2023</code>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          </div>
+
           <form method="POST" action="/admin/login">
             <div class="mb-3">
               <label for="email" class="form-label">Email</label>
