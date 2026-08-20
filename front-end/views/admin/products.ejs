@@ -107,10 +107,10 @@
             </td>
 
             <td>
-              <div class="btn-group btn-group-sm" role="group">
+              <div class="action-buttons">
                 <a
                   href="/admin/products/<%= product.id %>/edit"
-                  class="btn btn-warning"
+                  class="btn btn-action-edit"
                 >
                   Edit
                 </a>
@@ -122,7 +122,7 @@
                 >
                   <button
                     type="submit"
-                    class="btn <%= product.isDeleted ? 'btn-success' : 'btn-danger' %>"
+                    class="btn <%= product.isDeleted ? 'btn-action-activate' : 'btn-action-delete' %>"
                   >
                     <%= product.isDeleted ? 'Reactivate' : 'Deactivate' %>
                   </button>
